@@ -1,3 +1,5 @@
+在本目录下直接执行 'rspec spec' 来运行测试。
+
 文件结构
 /root
 |--/spec
@@ -6,7 +8,7 @@
 |  |--spec_helper.rb        # 测试所需的助手方法
 |
 |--README                                   # 本文档
-|--seeds.rb                                 # 种子定义在这里
+|--seeds.rb                                 # 测试时需要的种子定义在这里
 |--users.rb                                 # 用户类，定义用户的行为
 |--.rspec                                   # rspec初始化时的参数
 |--.gitignore                               # gitignore文件
