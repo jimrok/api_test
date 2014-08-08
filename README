@@ -1,0 +1,12 @@
+文件结构
+/root
+|--/spec
+|  |--business_helper.rb    # 业务逻辑测试相关的助手方法
+|  |--groups_spec.rb        # 工作圈测试
+|  |--spec_helper.rb        # 测试所需的助手方法
+|
+|--README                                   # 本文档
+|--seeds.rb                                 # 种子定义在这里
+|--users.rb                                 # 用户类，定义用户的行为
+|--.rspec                                   # rspec初始化时的参数
+|--.gitignore                               # gitignore文件
