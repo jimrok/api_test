@@ -18,8 +18,8 @@ module SpecHelper
   $time_out_count_post = 0
   $time_out_count_get = 0
 
-  HOSTNAME = '192.168.100.216'
-  PORT = 8016
+  HOSTNAME = '192.168.100.87'
+  PORT = 3000
   TYPE = ''
 
   GRANT_TYPE = "password"
