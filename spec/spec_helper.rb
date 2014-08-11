@@ -3,7 +3,7 @@ module SpecHelper
   require 'net/http'
   require 'json'
   require "open-uri"
-  require "./helpers/seeds.rb"
+  require "./seeds.rb"
 
   include Seeds
 
@@ -18,8 +18,8 @@ module SpecHelper
   $time_out_count_post = 0
   $time_out_count_get = 0
 
-  HOSTNAME = '192.168.100.218'
-  PORT = 8018
+  HOSTNAME = '192.168.100.216'
+  PORT = 8016
   TYPE = ''
 
   GRANT_TYPE = "password"
