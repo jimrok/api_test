@@ -49,7 +49,28 @@ module SpecHelper
     $total_post += 1
     response_hash
   end
+  
+  
+  # 发送post请求。
+  # path: 接口url（不要包含域名）
+  # params: 哈希或字符串类型的参数列表。
+  # header：发送的HTTP header。
+  def put path, params={}, header={}
+    params = parse_params(params)
+    header = stringed_hash header
 
+    response = receive_put_response path, params, header
+    begin
+      response_hash = JSON.parse(response.body, symbolize_names: true)
+      log response_hash, 0
+    rescue  StandardError
+      response_hash = { errors: "not a json!" }
+      $errors_count_post += 1
+#       log response.body, 100000
+    end
+    $total_post += 1
+    response_hash
+  end
 
 
   # 发送get请求。
@@ -73,6 +94,20 @@ module SpecHelper
     $total_get += 1
     response_hash
   end
+  
+  def delete path,params={},header={}
+    url = "#{path}#{TYPE}?#{parse_params(params)}"
+    header = stringed_hash header
+    response = receive_delete_response url, header
+    log response
+    begin
+      ret = response.code
+    rescue  StandardError
+      ret = "500"
+    end
+    $total_get += 1
+    ret
+  end
 
 
   # 调试时所使用的log方法。当指定的level参数大于spec_helper中的PRINT_LOG时，向控制台输出指定字符串。
@@ -81,7 +116,7 @@ module SpecHelper
   end
 
   # 输出带颜色的字符串到终端。默认为红色。
-  def colored_str(message, color = 'red')  
+  def colored_str message, color = 'red'
     case color  
     when 'red'     
       color = '31;1'  
@@ -128,6 +163,26 @@ module SpecHelper
       end
     end
   end
+  
+  def receive_put_response path, params={}, header={}, count=0
+    Net::HTTP.start(HOSTNAME, PORT) do |http|
+      begin
+        http.request_put("#{path}#{TYPE}",params , header)
+        # TODO:判断如果http返回码是502,则稍等尝试重发一次
+      rescue Timeout::Error
+        # 捕获NGINX超时
+        $time_out_count_post += 1
+        count += 1
+        if count <= 3
+          puts "timeout. wait and retry."
+          sleep 1
+          receive_post_response path, params, header, count
+        else
+          p "3次超时。退出。"
+        end
+      end
+    end
+  end
 
   def receive_get_response h, url, header, count=0
     begin
@@ -139,6 +194,23 @@ module SpecHelper
         puts "timeout. wait and retry."
         sleep 2
         response = receive_get_response h, url, header, count
+      else
+        p "重试3次依然超时。"
+      end
+    end
+  end
+  
+  def receive_delete_response url,header, count=0
+    h = Net::HTTP.new HOSTNAME, PORT
+    begin
+      response = h.delete url, header
+    rescue Timeout::Error
+      $time_out_count_get += 1
+      count += 1
+      if count <= 3
+        puts "timeout. wait and retry."
+        sleep 2
+        response = receive_delete_response h, url, header, count
       else
         p "重试3次依然超时。"
       end
