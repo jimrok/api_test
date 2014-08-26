@@ -7,9 +7,9 @@ end
 module Seeds
   SUPER_ADMIN = {login_name: "admin", password: "workasadmin001"}
 
-  ADMIN_USER_BB = { login_name: "admin@bb", password: "111111" }
-  USER = { login_name: "wang@t.com", password: "222222", email: "wang@t.com", name: "老王"}
-  USER2 = { login_name: "li@t.com", password: "333333", email: "li@t.com", name: "老李"}
+  ADMIN_USER_BB = { login_name: "0001@minxing.com", password: "111111" }
+  USER = { login_name: "0001@minxing.com", password: "111111", email: "0001@minxing.com", name: "老王"}
+  USER2 = { login_name: "0002@minxing.com", password: "111111", email: "0002@minxing.com", name: "老李"}
 
   n = random_num
   RANDOM_USER_1 ||= {login_name: "rand_user_#{n}", password: "111111", email: "rand_#{n}@rand.com", name: "员工#{n}"}
@@ -30,5 +30,5 @@ module Seeds
     random_user
   end
 
-  NETWORK_1 ||= {id:9, name: "rand_group_4840479.com"}
+  NETWORK_1 ||= {id:2, name: "rand_group_4840479.com"}
 end
