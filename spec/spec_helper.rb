@@ -3,7 +3,7 @@ module SpecHelper
   require 'net/http'
   require 'json'
   require "open-uri"
-  require "./seeds.rb"
+  require "./helpers/seeds.rb"
 
   include Seeds
 
@@ -17,10 +17,20 @@ module SpecHelper
   $errors_count_get = 0
   $time_out_count_post = 0
   $time_out_count_get = 0
+  $reset_by_peer = 0
 
-  HOSTNAME = '192.168.100.216'
-  PORT = 8016
+  HOSTNAME = '192.168.100.218'
+  PORT = 8018
+  MQTT_PORT = 1883
   TYPE = ''
+
+  MQTT_OPTIONS = {
+    remote_host: HOSTNAME,
+    remote_port:  MQTT_PORT,
+    username: "server",
+    password: "minxing123",
+    ssl: true
+  }
 
   GRANT_TYPE = "password"
   APP_ID = 2
@@ -29,11 +39,7 @@ module SpecHelper
   PRINT_LOG = 2
 
 
-  # 发送post请求。
-  # path: 接口url（不要包含域名）
-  # params: 哈希或字符串类型的参数列表。
-  # header：发送的HTTP header。
-  def post path, params={}, header={}
+  def post path, params={}, header={}, count=0
     params = parse_params(params)
     header = stringed_hash header
 
@@ -42,9 +48,17 @@ module SpecHelper
       response_hash = JSON.parse(response.body, symbolize_names: true)
       log response_hash, 0
     rescue  StandardError
-      response_hash = { errors: "not a json!" }
       $errors_count_post += 1
-#       log response.body, 100000
+      log "not a json, retry!", 5
+      count += 1
+      response_hash = 
+        if count > 3
+          log "三次尝试失败", 5
+          { errors: "not a json!" }
+        else
+          post path, params, header, count
+        end
+      #       log response.body, 100000
     end
     $total_post += 1
     response_hash
@@ -52,14 +66,10 @@ module SpecHelper
 
 
 
-  # 发送get请求。
-  # path: 接口url（不包含域名）
-  # params: 哈希或字符串类型的参数列表。
-  # header：发送的HTTP header。
   def get path, params={}, header={}
     h = Net::HTTP.new HOSTNAME, PORT
     url = "#{path}#{TYPE}?#{parse_params(params)}"
-    header = stringed_hash header
+      header = stringed_hash header
 
     response = receive_get_response h, url, header
 
@@ -68,19 +78,17 @@ module SpecHelper
       log response_hash, 0
     rescue  StandardError
       response_hash = { errors: "not a json!" }
-#       log response.body, 1
+      #       log response.body, 1
     end
     $total_get += 1
     response_hash
   end
 
 
-  # 调试时所使用的log方法。当指定的level参数大于spec_helper中的PRINT_LOG时，向控制台输出指定字符串。
   def log str, level=0
     puts "    #{str}" if level > PRINT_LOG
   end
 
-  # 输出带颜色的字符串到终端。默认为红色。
   def colored_str(message, color = 'red')  
     case color  
     when 'red'     
@@ -100,9 +108,8 @@ module SpecHelper
     end  
 
     "\e[#{color}m#{message}\e[0m\n"   
-  end
+  end  
 
-  # 向终端输出一个响铃符号。
   def alarm
     print "\a"
   end
@@ -110,22 +117,54 @@ module SpecHelper
   private
 
   def receive_post_response path, params={}, header={}, count=0
-    Net::HTTP.start(HOSTNAME, PORT) do |http|
-      begin
-        http.request_post("#{path}#{TYPE}",params , header)
-        # TODO:判断如果http返回码是502,则稍等尝试重发一次
-      rescue Timeout::Error
-        # 捕获NGINX超时
-        $time_out_count_post += 1
-        count += 1
-        if count <= 3
-          puts "timeout. wait and retry."
-          sleep 1
-          receive_post_response path, params, header, count
-        else
-          p "3次超时。退出。"
+    begin
+      Net::HTTP.start(HOSTNAME, PORT) do |http|
+        begin
+          http.request_post("#{path}#{TYPE}",params , header)
+          # TODO:判断如果http返回码是502,则稍等尝试重发一次
+        rescue Timeout::Error
+          $time_out_count_post += 1
+          count += 1
+          if count <= 3
+            puts "timeout #{count} times. wait and retry."
+            sleep 5
+            receive_post_response path, params, header, count
+          else
+            p "3次超时。退出。"
+          end
+        rescue Errno::ECONNREFUSED
+          $time_out_count_post += 1
+          count += 1
+          if count <= 3
+            puts "timeout #{count} times. wait and retry."
+            sleep 5
+            receive_post_response path, params, header, count
+          else
+            p "3次超时。退出。"
+          end
         end
       end
+    rescue Errno::ECONNREFUSED
+      $time_out_count_post += 1
+      count += 1
+      if count <= 3
+        puts "timeout #{count} times. wait and retry."
+        sleep 5
+        receive_post_response path, params, header, count
+      else
+        p "3次超时。退出。"
+      end
+    rescue Errno::ECONNRESET
+      $reset_by_peer += 1
+      count += 1
+      if count <= 3
+        puts "reset_by_peer #{count} times. wait and retry."
+        sleep 5
+        receive_post_response path, params, header, count
+      else
+        p "3次超时。退出。"
+      end
+
     end
   end
 
@@ -137,22 +176,34 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "timeout. wait and retry."
-        sleep 2
-        response = receive_get_response h, url, header, count
+        sleep 5
+        response = h.request_get url, header
       else
         p "重试3次依然超时。"
+      end
+    rescue Errno::ECONNREFUSED
+      $time_out_count_get += 1
+      count += 1
+      if count <= 3
+        puts "timeout. wait and retry."
+        sleep 5
+        response = h.request_get url, header
+      else
+        p "重试3次依然超时。"
+      end
+    rescue Errno::ECONNRESET
+      $reset_by_peer += 1
+      count += 1
+      if count <= 3
+        puts "reset_by_peer. wait and retry."
+        sleep 5
+        response = h.request_get url, header
+      else
+        p "重试3次依然被重置。"
       end
     end
   end
 
-  # 将哈希表里的key和value都转换成字符串
-  def stringed_hash hash
-    h = {}
-    hash.each { |key, value| h[key.to_s] = value.to_s }
-    h
-  end
-
-  # 将哈希形式的参数表包装成字符串形式并将参数值进行url编码。如果已经是字符串，则不变。
   def parse_params params
     if params.is_a? String
       params
@@ -165,8 +216,6 @@ module SpecHelper
   end
 
 
-  # 未使用
-  # 将哈希形式的header包装成字符串形式并将参数值进行url编码。如果已经是字符串，则不变。
   def parse_header header
     if header.is_a? String
       header 
@@ -176,5 +225,11 @@ module SpecHelper
       header_string = h.inject('') { |sum, k| sum += "#{k.first.to_s}:#{k.last} " }[0..-2]
       header_string
     end
+  end
+
+  def stringed_hash hash
+    h = {}
+    hash.each { |key, value| h[key.to_s] = value.to_s }
+    h
   end
 end
