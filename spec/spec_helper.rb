@@ -39,6 +39,10 @@ module SpecHelper
   PRINT_LOG = 2
 
 
+  # 发送post请求。
+  # path: 接口url（不要包含域名）
+  # params: 哈希或字符串类型的参数列表。
+  # header：发送的HTTP header。
   def post path, params={}, header={}, count=0
     params = parse_params(params)
     header = stringed_hash header
@@ -65,7 +69,7 @@ module SpecHelper
   end
   
   
-  # 发送post请求。
+  # 发送put请求。
   # path: 接口url（不要包含域名）
   # params: 哈希或字符串类型的参数列表。
   # header：发送的HTTP header。
@@ -87,6 +91,10 @@ module SpecHelper
   end
 
 
+  # 发送get请求。
+  # path: 接口url（不要包含域名）
+  # params: 哈希或字符串类型的参数列表。
+  # header：发送的HTTP header。
   def get path, params={}, header={}
     h = Net::HTTP.new HOSTNAME, PORT
     url = "#{path}#{TYPE}?#{parse_params(params)}"
@@ -105,6 +113,10 @@ module SpecHelper
     response_hash
   end
   
+  # 发送delete请求。
+  # path: 接口url（不要包含域名）
+  # params: 哈希或字符串类型的参数列表。
+  # header：发送的HTTP header。
   def delete path,params={},header={}
     url = "#{path}#{TYPE}?#{parse_params(params)}"
     header = stringed_hash header
@@ -120,31 +132,18 @@ module SpecHelper
   end
 
 
-  def log str, level=0
+  # 如果指定的输出等级大于PRINT_LOG，则在控制台中输出字符串
+  # 如果指定了color参数则输出带颜色的字符串
+  def log str, level=0, color=nil
+    str = 
+      if color
+        colored_str str, color
+      else
+        str
+      end
     puts "    #{str}" if level > PRINT_LOG
   end
 
-  # 输出带颜色的字符串到终端。默认为红色。
-  def colored_str message, color = 'red'
-    case color  
-    when 'red'     
-      color = '31;1'  
-    when 'green'
-      color = '32;1'  
-    when 'yellow'
-      color = '33;1'  
-    when 'blue'
-      color = '34;1'  
-    when 'purple'
-      color = '35;1'  
-    when 'sky'
-      color = '36;1'  
-    else
-      color = '36;1'  
-    end  
-
-    "\e[#{color}m#{message}\e[0m\n"   
-  end  
 
   def alarm
     print "\a"
@@ -295,4 +294,26 @@ module SpecHelper
     hash.each { |key, value| h[key.to_s] = value.to_s }
     h
   end
+
+  # 返回能够被终端识别的、带颜色的字符串。默认为红色。
+  def colored_str message, color = 'red'
+    case color  
+    when 'red'     
+      color = '31;1'  
+    when 'green'
+      color = '32;1'  
+    when 'yellow'
+      color = '33;1'  
+    when 'blue'
+      color = '34;1'  
+    when 'purple'
+      color = '35;1'  
+    when 'sky'
+      color = '36;1'  
+    else
+      color = '36;1'  
+    end  
+
+    "\e[#{color}m#{message}\e[0m\n"   
+  end  
 end
