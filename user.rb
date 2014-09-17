@@ -12,6 +12,7 @@ class User
   def initialize options
      @login_name = options[:login_name]
      @password = options[:password]
+     @response_obj = nil
   end
   
   #  用户登陆
@@ -118,5 +119,14 @@ class User
   def receive_mqtt &p
     mqtt_options = MQTT_OPTIONS.merge client_id: self.response_obj[:account_id].to_s
     subscribe response_obj[:account_channel], mqtt_options, &p
+  end
+
+  def method_missing method, &args
+    _method = method.to_sym
+    if self.response_obj[:users].first.has_key? _method
+      self.response_obj[:users].first[_method]
+    else
+      super
+    end
   end
 end
