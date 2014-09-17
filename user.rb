@@ -121,7 +121,18 @@ class User
     subscribe response_obj[:account_channel], mqtt_options, &p
   end
 
-  def method_missing method, &args
+  def errors
+    if self.response_obj.has_key?(:error) 
+      self.response_obj[:error]
+    elsif self.response_obj.has_key?(:errors) 
+      self.response_obj[:errors]
+    else
+      nil
+    end
+  end
+
+
+  def method_missing method, *args
     _method = method.to_sym
     if self.response_obj[:users].first.has_key? _method
       self.response_obj[:users].first[_method]
