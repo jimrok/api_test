@@ -26,8 +26,8 @@ module BusinessHelper
                 end
     expect(response[:errors]).to be_nil, "#{user1.name}发送测试#{type}失败,#{response}"
     thread_id = response[:items].first[:id]
-log response
-r = colored_str "发送测试#{type}成功: #{test_msg}",'green'
+    log response
+    r = colored_str "发送测试#{type}成功: #{test_msg}",'green'
     log r
 
     log "等待#{wait_seconds}秒"
@@ -52,9 +52,13 @@ r = colored_str "发送测试#{type}成功: #{test_msg}",'green'
     #取消赞
     response = user2.send_unLike(message_id:thread_id)
     expect(response).to eq "200"
+
+    sleep wait_seconds
     #删除帖子
     response = user1.delete_message thread_id
     expect(response).to eq "200"
+
+    sleep wait_seconds
     #删除分享
     response = user2.delete_message share_id
     expect(response).to eq "200"
