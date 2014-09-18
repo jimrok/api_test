@@ -27,10 +27,10 @@ end
 SUPER_ADMIN_LOGIN_NAME = 'admin@ee.com'
 
 
-describe "用户" do
+describe "用户登陆" do
   login = Login.instance
 
-  it "不匹配的用户名和密码应有提示" do
+  it "用户名和密码不匹配时应有提示" do
     u = User.new(login_name: "unexist", pwd: "111111").login
     expect(u.errors).to_not be_nil, u.errors.inspect
 
@@ -38,7 +38,13 @@ describe "用户" do
     expect(u.errors).to_not be_nil, u.errors.inspect
   end
 
-  it "管理员登陆" do
+  it "全网管理员可以登陆" do
+    root_admin = User.new(login_name: 'admin', password: "workasadmin001").login
+#     puts super_admin.inspect
+    expect(root_admin.errors).to be_nil, "全网管理员登陆失败，#{super_admin.inspect}"
+  end
+
+  it "社区管理员可以登陆并接收推送消息" do
     super_admin = User.new(login_name: SUPER_ADMIN_LOGIN_NAME, password: "111111").login
     login.super_admin = super_admin
 #     puts super_admin.inspect
@@ -49,7 +55,7 @@ describe "用户" do
   end
   
   describe do
-    it "获取用户列表,并登录" do
+    it "社区内的用户可以登录并接收推送消息" do
       #let(:users) do
       # 跳过已经登陆的第一个管理员用户
       user_infos = get('/api/v1/users.json', {:page=>1,:limit=>5}, super_admin.header)[:items][1..-1]

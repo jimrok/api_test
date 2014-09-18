@@ -3,6 +3,7 @@ require './common/login_spec.rb'
 users = []
 super_admin = nil
 group_id = 0
+$msgs = []
 
 describe "工作圈创建相关测试" do
   before :each do
@@ -26,7 +27,10 @@ describe "工作圈创建相关测试" do
     expect(response.first[:name]).to eq name
     group_id = response.first[:id]
     sleep 2
-    expect($msgs.count).to eq 1
+    r = expect($msgs.count).to eq 1
+    r &&= expect($msgs.first[:type]).to eq "sync"
+    log colored_str("创建者应收到同步推送", r), 5
+    
   end
 
   it "给工作圈添加成员" do
@@ -41,9 +45,11 @@ describe "工作圈创建相关测试" do
     user_ids = user_ids[0,user_ids.size-1]
     response = post "/api/v1/groups/#{group_id}/members",{user_ids:user_ids},users[0].header
     log response
-    expect(response[:meta][:group][:user_ids]).to match_array(u)
+    r = expect(response[:meta][:group][:user_ids]).to match_array(u)
+    log colored_str("成员中应包含被添加的人员", r), 5
     sleep 5
-    expect($msgs.count).to eq(2*(users.count-1))
+    r = expect($msgs.count).to eq(2*(users.count-1))
+    log colored_str("被添加的人员都应收到通知", r), 5
   end
 
   it "修改工作圈的名字" do
@@ -59,7 +65,8 @@ describe "工作圈创建相关测试" do
     sleep 3
     log response
     expect(response[:code]).to eq 200
-    expect($msgs.count).to eq users.count
+    r = expect($msgs.count).to eq users.count
+    log colored_str("工作圈成员都应收到改名通知", r), 5
   end
 
 
@@ -72,22 +79,37 @@ describe "工作圈创建相关测试" do
     end
     response = delete "/api/v1/groups/#{group_id}/members/#{uid}",{} ,users[0].header
     expect(response).to eq "200"
-    expect($msgs.count).to eq 1
+    sleep 2
+    r = expect($msgs.count).to eq 1
+    log colored_str("被删除的成员应收到通知", r), 5
+    $msgs = []
   end
 
   it "被删除的成员主动加回该工作圈" do 
     response = post "/api/v1/groups/#{group_id}/members",{},users[users.size-1].header
     expect(response[:meta][:group][:id]).to eq group_id
+    sleep 2
+    r = expect($msgs.count).to eq 1
+    r &&= expect($msgs.first[:type]).to eq "private_message"
+    log colored_str("工作圈创建者应收到被删除的成员申请加入的通知", r), 5
+    $msgs = []
   end
 
   it "成员主动退出该工作圈" do 
     response = delete "/api/v1/groups/#{group_id}/members",{},users[users.size-1].header
     expect(response).to eq "200"
+    sleep 2
+    $msgs = []
   end
 
   it "删除一个工作圈" do
     response = delete "/api/v1/groups/#{group_id}",{} ,users[0].header
     expect(response).to eq "200"
+    sleep 2
+    r = expect($msgs.count).to eq users.count-1
+    $msgs.each {|m| r &&= expect(m[:type]).to eq "sync"}
+    log colored_str("工作圈内的成员应收到删除通知", r), 5
+    $msgs = []
   end
 
   it "获取更多的工作圈" do

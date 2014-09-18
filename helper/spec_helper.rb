@@ -162,7 +162,7 @@ module SpecHelper
           count += 1
           if count <= 3
             puts "timeout #{count} times. wait and retry."
-            sleep 5
+#             sleep 5
             receive_post_response path, params, header, count
           else
             p "3次超时。退出。"
@@ -174,7 +174,7 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "timeout #{count} times. wait and retry."
-        sleep 5
+#         sleep 5
         receive_post_response path, params, header, count
       else
         p "3次连接被拒绝。退出。"
@@ -184,7 +184,7 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "reset_by_peer #{count} times. wait and retry."
-        sleep 5
+#         sleep 5
         receive_post_response path, params, header, count
       else
         p "3次依然被重置。退出。"
@@ -204,7 +204,7 @@ module SpecHelper
         count += 1
         if count <= 3
           puts "timeout. wait and retry."
-          sleep 1
+#           sleep 1
           receive_post_response path, params, header, count
         else
           p "3次超时。退出。"
@@ -221,7 +221,7 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "timeout. wait and retry."
-        sleep 5
+#         sleep 5
         response = h.request_get url, header
       else
         p "重试3次依然超时。"
@@ -231,7 +231,7 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "timeout. wait and retry."
-        sleep 5
+#         sleep 5
         response = h.request_get url, header
       else
         p "重试3次依然被拒绝。"
@@ -241,7 +241,7 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "reset_by_peer. wait and retry."
-        sleep 5
+#         sleep 5
         response = h.request_get url, header
       else
         p "重试3次依然被重置。"
@@ -258,7 +258,7 @@ module SpecHelper
       count += 1
       if count <= 3
         puts "timeout. wait and retry."
-        sleep 2
+#         sleep 2
         response = receive_delete_response h, url, header, count
       else
         p "重试3次依然超时。"
@@ -295,11 +295,11 @@ module SpecHelper
     h
   end
 
-  # 返回能够被终端识别的、带颜色的字符串。默认为红色。
-  def colored_str message, color = 'red'
+  # 返回能够被终端识别的、带颜色的字符串。默认为蓝色;若color为'red'或布尔值false，则输出红色。
+  def colored_str message, color = 'sky'
     case color  
-    when 'red'     
-      color = '31;1'  
+    when 'red'
+      color = '31;1'
     when 'green'
       color = '32;1'  
     when 'yellow'
@@ -310,6 +310,8 @@ module SpecHelper
       color = '35;1'  
     when 'sky'
       color = '36;1'  
+    when false
+      color = '31;1'  
     else
       color = '36;1'  
     end  
