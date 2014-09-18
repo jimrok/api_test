@@ -14,6 +14,7 @@ require './common/TalkContent.rb'
 include SpecHelper
 include BusinessHelper
 
+$msgs = []
 users = []
 super_admin = nil
 
@@ -28,12 +29,23 @@ SUPER_ADMIN_LOGIN_NAME = 'admin@ee.com'
 
 describe "用户" do
   login = Login.instance
+
+  it "不匹配的用户名和密码应有提示" do
+    u = User.new(login_name: "unexist", pwd: "111111").login
+    expect(u.errors).to_not be_nil, u.errors.inspect
+
+    u = User.new(login_name: "admin", pwd: "111111").login
+    expect(u.errors).to_not be_nil, u.errors.inspect
+  end
+
   it "管理员登陆" do
     super_admin = User.new(login_name: SUPER_ADMIN_LOGIN_NAME, password: "111111").login
     login.super_admin = super_admin
 #     puts super_admin.inspect
     expect(super_admin.errors).to be_nil, "管理员登陆失败，#{super_admin.inspect}"
-    
+    super_admin.receive_mqtt do |topic, msg|
+      $msgs << msg
+    end
   end
   
   describe do
@@ -44,6 +56,9 @@ describe "用户" do
       user_infos.each do |user|
         if user[:name] != '管理员' then
           user = User.new(login_name: user[:pinyin] + '@ee.com', password: '111111').login
+          user.receive_mqtt do |topic, msg| 
+            $msgs << msg
+          end
           users << user
           expect(user.errors).to be_nil, "登陆失败， #{user.inspect}"
         end
