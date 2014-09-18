@@ -1,8 +1,8 @@
 #encoding=utf-8
 class User
   # 用户类
-  require 'spec_helper'
-  require 'mqtt_helper'
+  require './helper/spec_helper'
+  require './helper/mqtt_helper'
   require 'digest'
 
   include MqttHelper
@@ -65,7 +65,7 @@ class User
   end
   
   def send_like like
-    response  = post '/api/v1/messages/liked_by/current', like,header
+    post '/api/v1/messages/liked_by/current', like,header
   end
   
   def delete_message thread_id
@@ -105,15 +105,15 @@ class User
   end
   
   def complete_task tid,id
-    response = post "/api/v1/mini_tasks/#{tid}",{check_item_id:id,checked:true,method:"mark_check_item"},header
+    post "/api/v1/mini_tasks/#{tid}",{check_item_id:id,checked:true,method:"mark_check_item"},header
   end
   
   def join_activity tid,status
-     response = post "/api/v1/mmodules/event/#{tid}",{proc_name:"merge",status:status},header
+    post "/api/v1/mmodules/event/#{tid}",{proc_name:"merge",status:status},header
   end
   
   def vote tid,id
-    response = post "/api/v1/mmodules/poll/#{tid}",{index:id},header
+    post "/api/v1/mmodules/poll/#{tid}",{index:id},header
   end
 
   def receive_mqtt &p

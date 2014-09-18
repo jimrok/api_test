@@ -5,9 +5,9 @@ require 'json'
 require "open-uri"
 require 'singleton'
 
-require './spec/spec_helper.rb'
+require './helper/spec_helper.rb'
 require './user.rb'
-require "./spec/business_helper"
+require "./helper/business_helper"
 require './common/TalkContent.rb'
 
 
