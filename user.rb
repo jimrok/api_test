@@ -6,7 +6,7 @@ class User
   require 'digest'
 
   include MqttHelper
-  attr_accessor :login_name, :password, :access_token, :network_id, :response_obj,:account_id,:account_channel
+  attr_accessor :login_name, :password, :access_token, :network_id, :response_obj, :account_id, :account_channel
 
   # 使用指定的登陆名和密码创建一个未登录用户模型
   def initialize options
@@ -16,7 +16,7 @@ class User
   end
   
   #  用户登陆
-  def login
+  def login options={}
     response = post '/oauth2/token', params
     self.access_token = response[:access_token]
     self.network_id = response[:default_network_id]
@@ -29,7 +29,7 @@ class User
     self.response_obj = response
     log self.response_obj
 
-    response = post '/api/v1/users/current/devices',{:apn_token=>'',:client_version=>'9.9.9.9',:device_name=>'iPhone 5s',:device_os_version=>'8.0',:device_uuid=>uuid}, header
+    self.regist_device options
     
     log response
     self
@@ -59,6 +59,49 @@ class User
     params = {"attached[]"=> "()",group_id: group_id, body: message, threaded: "extended"}
     post_to_messages params, options
   end
+
+  def regist_device options={}
+    # 默认在登陆时作为安卓设备登陆。可以修改为苹果。
+    # iPhone device
+    # default_options = {
+    #   device_uuid: uuid, device_name: 'iPhone 5s',
+    #   apn_token:'',
+    #   device_os_version:'8.0', 
+    #   client_version: '9.9.9.9',
+    # }
+
+    default_options = {
+      device_uuid: "10000#{id}", device_name: 'android device',
+      apn_token: '766593005693248778', device_sn: '076b62c5',
+      device_os_version: '4.3',
+      device_fingerprint: 'samsung/hltezm/hlte:4.3/JSS15J/N9008VZMUBNA2:user/release-keys'
+    }
+
+    params = default_options.merge options
+    path = "/api/v1/users/current/devices.json"
+
+    response = post path, params, header
+    response
+  end
+
+  # 直接根据user_ids发送群聊
+  def direct_send_minxin ids, message, options={}
+    id_array_str = 
+      if ids.is_a? Array
+        ids.join ","
+      else
+        ids.to_s
+      end
+    
+    params = {direct_to_user_ids: id_array_str, body: message}
+    post_to_messages params, options, "/api/v1/conversations"
+  end
+
+  # 根据会话id发送群聊
+  def send_minxin_by_conversation_id conversation_id, message, options={}
+    params = {body: message}
+    post_to_messages params, options, "/api/v1/conversations/#{conversation_id}/messages"
+  end
   
   def send_unLike unlike
     delete '/api/v1/messages/liked_by/current',unlike,header
@@ -81,14 +124,13 @@ class User
 
   #   返回当前用户的登陆参数
   def params
-    p = {grant_type: GRANT_TYPE, login_name: self.login_name, password: self.password,
-         app_id: APP_ID, app_secret: APP_SECRET}
-    p
+    @params ||= { login_name: self.login_name, password: self.password,
+             grant_type: GRANT_TYPE, app_id: APP_ID, app_secret: APP_SECRET }
   end
 
   # 返回当前用户所需要发送的HTTP header
   def header
-    {:Authorization=> "bearer #{access_token}", :NETWORK_ID=> self.network_id}
+    @header ||= {:Authorization=> "bearer #{access_token}", :NETWORK_ID=> self.network_id}
   end
 
   # 返回当前用户的名字
@@ -118,7 +160,8 @@ class User
 
   def receive_mqtt &p
     mqtt_options = MQTT_OPTIONS.merge client_id: self.response_obj[:account_id].to_s
-    subscribe response_obj[:account_channel], mqtt_options, &p
+    t = Thread.new { subscribe response_obj[:account_channel], mqtt_options, &p }
+    t.run
   end
 
   def errors
