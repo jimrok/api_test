@@ -17,12 +17,18 @@ class TalkContent
   def getJsonContent index
     @jsonContent[index]
   end
+
   def getContent index
     @content[index]
   end
   
   def size
     @size
+  end
+
+  def get_random_content
+    index = rand self.size
+    self.getContent index
   end
   
 end

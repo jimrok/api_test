@@ -29,7 +29,11 @@ class User
     self.response_obj = response
     log self.response_obj
 
-    self.regist_device options
+    begin
+      self.regist_device options
+    rescue
+      # do nothing.
+    end
     
     log response
     self
@@ -139,15 +143,19 @@ class User
   end
 
   # 创建会话
-  def post_to_messages params, options
+  def post_to_messages params, options, url="/api/v1/messages"
     params = params.merge options
-    response = post "/api/v1/messages", params, header
+    response = post url, params, header
     log response
     response
   end
   
   def complete_task tid,id
     post "/api/v1/mini_tasks/#{tid}",{check_item_id:id,checked:true,method:"mark_check_item"},header
+  end
+
+  def from_last_seen force_reload=false
+    get "/api/v1/conversations/from_last_seen", {force_reload: force_reload}, self.header
   end
   
   def join_activity tid,status
