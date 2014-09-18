@@ -19,7 +19,7 @@ module SpecHelper
   $time_out_count_get = 0
   $reset_by_peer = 0
 
-  HOSTNAME = '192.168.100.87'
+  HOSTNAME = '192.168.100.102'
   PORT = 3000
   MQTT_PORT = 1883
   TYPE = ''
@@ -177,7 +177,7 @@ module SpecHelper
         sleep 5
         receive_post_response path, params, header, count
       else
-        p "3次超时。退出。"
+        p "3次连接被拒绝。退出。"
       end
     rescue Errno::ECONNRESET
       $reset_by_peer += 1
@@ -187,7 +187,7 @@ module SpecHelper
         sleep 5
         receive_post_response path, params, header, count
       else
-        p "3次超时。退出。"
+        p "3次依然被重置。退出。"
       end
 
     end
@@ -234,7 +234,7 @@ module SpecHelper
         sleep 5
         response = h.request_get url, header
       else
-        p "重试3次依然超时。"
+        p "重试3次依然被拒绝。"
       end
     rescue Errno::ECONNRESET
       $reset_by_peer += 1

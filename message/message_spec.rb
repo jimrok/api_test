@@ -6,8 +6,8 @@ super_admin = nil
 
 describe "工作圈" do
   before :each do
-    users = Login.getInstance.users
-    super_admin = Login.getInstance.super_admin
+    users = Login.instance.users
+    super_admin = Login.instance.super_admin
   end
   
   it "不登陆无法发送消息" do
