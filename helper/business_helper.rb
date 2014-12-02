@@ -41,6 +41,7 @@ module BusinessHelper
 
     thread_id = response[:items].first[:id]
     # 查看工作圈，刚才的发送是否成功
+    sleep 3
     $msgs = []
     explore_messages user2,group_id, type,test_msg
     #回复帖子
@@ -142,7 +143,7 @@ module BusinessHelper
     items = user_messages[:items]
     liked_by = items.first[:liked_by][:ids].first
 
-    r &&= expect(liked_by).to eq user2.account_id 
+    r &&= expect(liked_by).to eq user2.id 
     log colored_str("客户端应能查看到回复消息及点赞状态", r), 5
   end
 

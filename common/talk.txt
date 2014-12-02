@@ -32,7 +32,6 @@
 下周要升温了
 那手机上其他程序如果报这个，也是显示在那
 而且目前只有这个手机见到过
-http://www.amazon.cn/dp/B0010LD9CY/ref=dra_a_cs_mr_hn_it_P1400_1000?tag=dradisplaycn-23&ascsubtag=4a251a2ef9bbf4ccc35f97aba2c9cbda
 谁给我讲讲红黑树、B树、2-3-4树。。。
 我老婆单位招人，加班待遇丰厚
 今年赌球90%都悲剧

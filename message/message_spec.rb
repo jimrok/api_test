@@ -9,6 +9,7 @@ describe "工作圈" do
   before :each do
     users = Login.instance.users
     super_admin = Login.instance.super_admin
+    offline_users = Login.instance.offline_users
   end
 
   it "不登陆无法发送消息" do
@@ -38,8 +39,8 @@ describe "工作圈" do
 
   it "用户可向工作圈中发布、完成任务、回复消息，点赞、取消赞并能查看到，最后删除" do
     check_send users, "任务", 3 do |user, group_id, msg|
-      task1 = {due_date: (DateTime.now + 3).to_s, content: "1", checked: "false", assignee_id: user2.account_id}
-      task2 = {due_date: "", content: "2", checked: "false", assignee_id: user2.account_id}
+      task1 = {due_date: (DateTime.now + 3).to_s, content: "1", checked: "false", assignee_id: user2.id}
+      task2 = {due_date: "", content: "2", checked: "false", assignee_id: user2.id}
       task3 = {due_date: (DateTime.now + 4).to_s, content:"3", checked:"false", assignee_id:""}
       task4 = {due_date: "", content: "4", checked: "false", assignee_id: ""}
       stroy = {app_name: "mini_task", threaded: "extended", 
@@ -56,7 +57,7 @@ describe "工作圈" do
       private_messages = $msgs.select {|m| m[:type] == "private_message"}
       notifies = $msgs.select {|m| m[:type] == "notification"}
       r = expect(private_messages.count).to eq 2
-      r &&= expect(notifies.count).to eq users.count
+      r &= expect(notifies.count).to eq users.count
       log colored_str("用户B收到两条通知消息，其他用户收到小红点消息。", r), 5
 
 
@@ -73,7 +74,7 @@ describe "工作圈" do
         r = expect(response0[:error]).to be_nil
         response0[:items][0][:check_items].each do |c|
           if id == c[:id] then
-            r &&= expect(c[:checked]).to eq true
+            r &= expect(c[:checked]).to eq true
             break
           end
         end
@@ -83,7 +84,7 @@ describe "工作圈" do
 
       r = expect($msgs.count).to eq 4
       $msgs.each do |m|
-        r &&= expect(m[:data][:direct_to_user_id]).to eq user.id
+        r &= expect(m[:data][:direct_to_user_id]).to eq user.id
       end
       log colored_str("用户A应收到4条通知消息", r), 5
 
@@ -98,7 +99,7 @@ describe "工作圈" do
       stroy = {app_name: "event", properties: { description: "活动说明", title: msg, location: "某地点",
                                                 start: DateTime.now.to_s, end: (DateTime.now + 3).to_s, 
                                                 confirm_end_time: (DateTime.now + 1).to_s
-      } 
+        }
       }
       response = user.create_story_msg group_id, stroy, body: msg
       r = expect(response[:errors]).to be_nil
@@ -109,18 +110,18 @@ describe "工作圈" do
       #resp = items[0][:attachments][0][:responses]
       tid = items[0][:attachments][0][:id]
       response0 = user.join_activity tid.to_s,"yes"
-      r = expect(response0[:responses][:yes][:ids]).to match_array([user.account_id])
+      r = expect(response0[:responses][:yes][:ids]).to match_array([user.id])
       log colored_str("用户A参加活动，活动的参加者中应有A", r), 5
 
       response0 = user2.join_activity tid.to_s,"no"
-      r = expect(response0[:responses][:no][:ids]).to match_array([user2.account_id])
+      r = expect(response0[:responses][:no][:ids]).to match_array([user2.id])
       log colored_str("用户B不参加活动，活动的不参加者中应有B", r), 5
 
       response0 = user.join_activity tid.to_s,"maybe"
 
       #NOTE: 用to_not时，断言的结果与expect的返回值正好相反，所以这里对r2取反。
-      r1 = expect(response0[:responses][:maybe][:ids]).to match_array([user.account_id])
-      r2 = expect(response0[:responses][:yes][:ids]).to_not match_array([user.account_id])
+      r1 = expect(response0[:responses][:maybe][:ids]).to match_array([user.id])
+      r2 = expect(response0[:responses][:yes][:ids]).to_not match_array([user.id])
       r = r1 && !r2
 
       log colored_str("用户A改为不确定，不确定参加者中应有A, 参加者中应没有A", r), 5
@@ -141,7 +142,7 @@ describe "工作圈" do
       tid = items[0][:attachments][0][:id]
       options = items[0][:attachments][0][:options]
       id = options[0][:index]
-      u = [user.account_id, user2.account_id]
+      u = [user.id, user2.id]
       response0 = user.vote tid,id.to_s
       response0 = user2.vote tid,id.to_s
       options = response0[:options]

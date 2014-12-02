@@ -6,7 +6,8 @@ class User
   require 'digest'
 
   include MqttHelper
-  attr_accessor :login_name, :password, :access_token, :network_id, :response_obj, :account_id, :account_channel
+  include SpecHelper
+  attr_accessor :login_name, :password, :access_token, :network_id, :response_obj, :account_id, :account_channel, :messages
 
   # 使用指定的登陆名和密码创建一个未登录用户模型
   def initialize options
@@ -37,6 +38,20 @@ class User
     
     log response
     self
+  end
+
+  def send_pic_to_conversation pic_path, conversation_id
+    url = "http://#{HOSTNAME}:#{PORT}/api/v1/uploaded_files"
+    pic_path = File.expand_path  pic_path
+    pic = File.new pic_path, "rb"
+
+    response_str = RestClient.post(url, {'uploading[]'=> [{data: pic}]}, self.header)
+    response = JSON.parse response_str, symbolize_names: true
+#     puts response.inspect
+    pic_id = response.first[:id]
+
+    response = post "/api/v1/conversations/#{conversation_id}/messages", {'attached[]'=> "uploaded_file:#{pic_id}"}, self.header
+    response
   end
   
   
@@ -75,10 +90,10 @@ class User
     # }
 
     default_options = {
-      device_uuid: "10000#{id}", device_name: 'android device',
+      device_uuid: "10000#{id}", device_name: 'ruby_test_devices',
       apn_token: '766593005693248778', device_sn: '076b62c5',
       device_os_version: '4.3',
-      device_fingerprint: 'samsung/hltezm/hlte:4.3/JSS15J/N9008VZMUBNA2:user/release-keys'
+      device_fingerprint: 'ruby/ruby/ruby:4.3/JSS15J/N9008VZMUBNA2:user/release-keys'
     }
 
     params = default_options.merge options
@@ -134,12 +149,20 @@ class User
 
   # 返回当前用户所需要发送的HTTP header
   def header
-    @header ||= {:Authorization=> "bearer #{access_token}", :NETWORK_ID=> self.network_id}
+    @header ||= {Authorization: "bearer #{access_token}", NETWORK_ID: self.network_id}
   end
 
   # 返回当前用户的名字
   def name
     response_obj[:users].first[:name]
+  end
+
+  def messages
+    @messages ||= []
+  end
+
+  def messagses_to_s
+    puts "#{self.id},#{self.name}:#{@messages.inspect}"
   end
 
   # 创建会话
