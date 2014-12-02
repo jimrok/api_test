@@ -32,8 +32,9 @@ ROOT_ADMIN_PWD = 'workasadmin001'
 SUPER_ADMIN_LOGIN_NAME = 'admin@ee.com'
 
 def get_login_name user_info
-#   user_info[:pinyin] + "ee.com"
+  # user_info[:pinyin] + "ee.com"
   user_info[:login_name]
+  # user_info[:emp_code]
 end
 
 
@@ -58,7 +59,7 @@ describe "用户登陆" do
     super_admin = User.new(login_name: SUPER_ADMIN_LOGIN_NAME, password: "111111").login
     login.super_admin = super_admin
 #     puts super_admin.inspect
-    expect(super_admin.errors).to be_nil, "管理员登陆失败，#{super_admin.inspect}"
+    expect(super_admin.errors).to be_nil, "管理员登陆失败，#{super_admin.errors.inspect}"
     super_admin.receive_mqtt do |topic, msg|
       m = JSON.parse(msg, symbolize_names: true)
       super_admin.messages << m

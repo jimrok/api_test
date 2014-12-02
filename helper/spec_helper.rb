@@ -4,6 +4,7 @@ module SpecHelper
   require 'json'
   require "open-uri"
   require "./seeds.rb"
+  require 'rest_client'
 
   include Seeds
 
@@ -19,13 +20,16 @@ module SpecHelper
   $time_out_count_get = 0
   $reset_by_peer = 0
 
-  HOSTNAME = '192.168.100.102'
-  PORT = 3000
+#   HOSTNAME = '192.168.100.102'
+#   PORT = 3000
+
+  HOSTNAME = '192.168.100.238'
+  PORT = 80
   MQTT_PORT = 1883
   TYPE = ''
 
   MQTT_OPTIONS = {
-    remote_host: HOSTNAME,
+    remote_host: "192.168.100.238",
     remote_port:  MQTT_PORT,
     username: "server",
     password: "minxing123",
