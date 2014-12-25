@@ -23,13 +23,13 @@ module SpecHelper
 #   HOSTNAME = '192.168.100.102'
 #   PORT = 3000
 
-  HOSTNAME = '192.168.100.238'
-  PORT = 80
-  MQTT_PORT = 1883
+  HOSTNAME = '192.168.100.230'
+  PORT = 8030
+  MQTT_PORT = 1830
   TYPE = ''
 
   MQTT_OPTIONS = {
-    remote_host: "192.168.100.238",
+    remote_host: "192.168.100.230",
     remote_port:  MQTT_PORT,
     username: "server",
     password: "minxing123",
