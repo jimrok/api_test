@@ -52,7 +52,7 @@ describe "工作圈" do
       log response
       items = response[:items]
       log colored_str("用户A创建4个任务，并指派两个任务给用户B。", r), 5
-      sleep 2
+      sleep 1
 
       private_messages = $msgs.select {|m| m[:type] == "private_message"}
       notifies = $msgs.select {|m| m[:type] == "notification"}
@@ -80,7 +80,7 @@ describe "工作圈" do
         end
       end
       log colored_str("用户B完成全部4个任务", r), 5
-      sleep 5
+      sleep 2
 
       r = expect($msgs.count).to eq 4
       $msgs.each do |m|

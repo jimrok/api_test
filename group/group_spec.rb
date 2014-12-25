@@ -27,7 +27,7 @@ describe "工作圈创建相关测试" do
 
     expect(response.first[:name]).to eq name
     group_id = response.first[:id]
-    sleep 2
+    sleep 1
     r = expect($msgs.count).to eq 1
     r &&= expect($msgs.first[:type]).to eq "sync"
     log colored_str("创建者应收到同步推送", r), 5
@@ -48,7 +48,7 @@ describe "工作圈创建相关测试" do
     log response
     r = expect(response[:meta][:group][:user_ids]).to match_array(user_id_array)
     log colored_str("成员中应包含被添加的人员", r), 5
-    sleep 5
+    sleep 1
 
     r = expect($msgs.count).to eq(2*(users.count-1))
     log colored_str("被添加的人员都应收到通知", r), 5
@@ -64,7 +64,7 @@ describe "工作圈创建相关测试" do
       public: false
     }
     response = put '/api/v1/groups/'+group_id.to_s,params,users[0].header
-    sleep 3
+    sleep 1
     log response
     expect(response[:code]).to eq 200
     r = expect($msgs.count).to eq users.count
@@ -81,7 +81,7 @@ describe "工作圈创建相关测试" do
     end
     response = delete "/api/v1/groups/#{group_id}/members/#{uid}",{} ,users[0].header
     expect(response).to eq "200"
-    sleep 2
+    sleep 1
     r = expect($msgs.count).to eq 1
     log colored_str("被删除的成员应收到通知", r), 5
     $msgs = []
@@ -90,7 +90,7 @@ describe "工作圈创建相关测试" do
   it "被删除的成员主动加回该工作圈" do 
     response = post "/api/v1/groups/#{group_id}/members",{},users[users.size-1].header
     expect(response[:meta][:group][:id]).to eq group_id
-    sleep 2
+    sleep 1
     r = expect($msgs.count).to eq 1
     r &&= expect($msgs.first[:type]).to eq "private_message"
     log colored_str("工作圈创建者应收到被删除的成员申请加入的通知", r), 5
@@ -100,14 +100,14 @@ describe "工作圈创建相关测试" do
   it "成员主动退出该工作圈" do 
     response = delete "/api/v1/groups/#{group_id}/members",{},users[users.size-1].header
     expect(response).to eq "200"
-    sleep 2
+    sleep 1
     $msgs = []
   end
 
   it "删除一个工作圈" do
     response = delete "/api/v1/groups/#{group_id}",{} ,users[0].header
     expect(response).to eq "200"
-    sleep 5
+    sleep 2
     r = expect($msgs.count).to eq users.count-1
     $msgs.each {|m| r &&= expect(m[:type]).to eq "sync"}
     log colored_str("工作圈内的成员应收到删除通知", r), 5

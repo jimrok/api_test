@@ -31,7 +31,7 @@ describe "群聊" do
    response = users.first.direct_send_minxin(user_ids, "", {})
    conversation_id = response[:items][0][:conversation_id]
    expect(conversation_id).not_to be_nil
-   sleep 2
+   sleep 1
 
    r = expect($msgs.size).to eq (2 * users.size )
    log colored_str("每个用户应收到一条邀请推送和一条群聊信息推送", r), 5
@@ -46,7 +46,7 @@ describe "群聊" do
    response = users.first.direct_send_minxin(user_ids, "", {})
    conversation_id2 = response[:items][0][:conversation_id]
    expect(conversation_id2).not_to eq conversation_id
-   sleep 2
+   sleep 1
 
    r = expect($msgs.size).to eq(2 * users.size )
    log colored_str("每个用户应收到一条邀请推送和一条群聊信息推送", r), 5
@@ -59,7 +59,7 @@ describe "群聊" do
       msg = tc.get_random_content
       response = users[rand(users.count)].send_minxin_by_conversation_id conversation_id, msg
       expect(response[:errors]).to be_nil
-      sleep 2
+      sleep 1
 
 #       puts $msgs.inspect
       expect($msgs.count).to eq(users.count - 1)
@@ -73,7 +73,7 @@ describe "群聊" do
   it "用户A修改群聊名称，包括自己在内的所有人都应收到改名的系统消息和同步推送" do
     $msgs = []
     put "/api/v1/conversations/#{conversation_id}", {name: "changed_name"}, users.first.header
-    sleep 2
+    sleep 1
     expect($msgs.count).to eq(2*users.count)
     $msgs = []
   end
@@ -85,14 +85,14 @@ describe "群聊" do
       ano_user.messages << m
       $msgs << m
     end
-    sleep 3
+    sleep 1
     $msgs = []
     users << ano_user
 
     url = "/api/v1/conversations/#{conversation_id}/users"
     response = post url, {user_id: "#{ano_user.id}"}, users.first.header
     expect(response[:errors]).to be_nil
-    sleep 3
+    sleep 1
 
     expect($msgs.count).to eq(2 * (users.count) )
     $msgs = []
@@ -104,7 +104,7 @@ describe "群聊" do
       msg = tc.get_random_content
       response = offline_users.first.send_minxin_by_conversation_id conversation_id, msg
       expect(response[:errors]).to be_nil
-      sleep 2
+      sleep 1
 
       expect($msgs.count).to eq(users.count - 1)
 
@@ -120,7 +120,7 @@ describe "群聊" do
      
      response = offline_users.first.send_pic_to_conversation pic_name, conversation_id
      expect(response[:errors]).to be_nil
-     sleep 2
+     sleep 1
  
      $msgs.each do |msg|
        expect(msg[:data][:image_base64]).to_not be_nil
